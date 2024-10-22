@@ -1,0 +1,1 @@
+C:\msys64\mingw64\bin\g++ -g3 -o c:\Users\olivi\kDrive\cours\UE_prog\projet\output\3d.exe c:\Users\olivi\kDrive\cours\UE_prog\projet\3d.cpp -IC:\msys64\mingw64\include -LC:\msys64\mingw64\lib -lSDL2main -lSDL2
