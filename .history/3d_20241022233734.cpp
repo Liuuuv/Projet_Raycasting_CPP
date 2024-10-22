@@ -47,7 +47,7 @@ float clamp(float value, float min, float max) {
     } else if (value > max) {  
         return max;  
     } else {  
-        return value;
+        return value;  
     }  
 }  
 

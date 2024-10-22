@@ -82,7 +82,7 @@ void render(SDL_Renderer* renderer, Player& player) {
             }
             distance += 0.001;
         }
-        distance *= cos(player.angle - rayAngle);
+        // distance *= cos(player.angle - rayAngle);
 
         // v1 //
         // int wallHeight = (int)(HEIGHT / (distance + 0.0001));
