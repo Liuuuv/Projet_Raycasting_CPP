@@ -118,6 +118,14 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset) {
             }
         }
 
+        // Détermination de la couleur selon le côté du mur touché (plus sombre sur les murs verticaux)
+        SDL_Color color = getColor(distance);
+        if (hitVertical) {
+            color.r /= 1.5f;
+            color.g /= 1.5f;
+            color.b /= 1.5f;
+        }
+
         distance *= cos(player.angle - rayAngle);
 
         // v1 //

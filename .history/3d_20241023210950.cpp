@@ -31,7 +31,7 @@ struct Player {
     float y;
     float angle;
     float pitch = 0;  // Nouvelle variable pour le "head pitch"
-    float horizontalFOV = 70 * PI / 180;
+    float horizontalFOV = 75 * PI / 180;
     float verticalFOV = 2.0f*atanf(tan(horizontalFOV/2.0f)*ASPECT_RATIO);
     // float verticalFOV = 120 * PI / 180;
     
@@ -67,57 +67,21 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
     
+
     for (int x = 0; x < WIDTH; x++) {
         float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;
         float rayX = cos(rayAngle);
         float rayY = sin(rayAngle);
-
-        // Calcul des pas unitaires pour avancer dans les axes X et Y
-        float xUnit = sqrtf(1 + powf(rayY / rayX, 2)); // Combien d'unités en X on parcourt
-        float yUnit = sqrtf(1 + powf(rayX / rayY, 2)); // Combien d'unités en Y on parcourt
-
-        // Détermination des directions (avancer ou reculer)
-        int stepX = (rayX < 0) ? -1 : 1;
-        int stepY = (rayY < 0) ? -1 : 1;
-
-        // Position initiale dans la grille
-        int testX = (int)player.x;
-        int testY = (int)player.y;
-
-        // Calcul du premier point d'intersection avec la grille
-        float sideDistX = (rayX < 0) ? (player.x - testX) * xUnit : (testX + 1.0f - player.x) * xUnit;
-        float sideDistY = (rayY < 0) ? (player.y - testY) * yUnit : (testY + 1.0f - player.y) * yUnit;
-
-        // Nouvelle variable pour savoir si on touche un côté vertical ou horizontal
-        bool hit = false;
-        bool hitVertical = false; // True si c'est un mur vertical, false si horizontal
         float distance = 0;
 
-        while (!hit) {
-            // Comparer les distances et avancer selon l'axe le plus proche
-            if (sideDistX < sideDistY) {
-                sideDistX += xUnit;  // Prochaine intersection en X
-                testX += stepX;      // Avancer dans la direction X
-                hitVertical = true;  // On a frappé un mur vertical
-            } else {
-                sideDistY += yUnit;  // Prochaine intersection en Y
-                testY += stepY;      // Avancer dans la direction Y
-                hitVertical = false; // On a frappé un mur horizontal
-            }
-
-            // Vérifier si on a touché un mur
+        while (true) {
+            int testX = (int)(player.x + rayX * distance);
+            int testY = (int)(player.y + rayY * distance);
             if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {
-                hit = true;
-                
-                // La distance finale est la distance sur l'axe qui a été touché en premier (X ou Y)
-                if (hitVertical) {
-                    distance = (testX - player.x + (1 - stepX) / 2) / rayX;
-                } else {
-                    distance = (testY - player.y + (1 - stepY) / 2) / rayY;
-                }
+                break;
             }
+            distance += 0.001;
         }
-
         distance *= cos(player.angle - rayAngle);
 
         // v1 //
@@ -184,10 +148,10 @@ float updateWalkOffset(bool isWalking, float walkCount) {
         }
     }
     else {
-        if (((walkSpeed < walkCount) && (walkCount <= PI / 2.0f)) || ((PI - walkSpeed <= walkCount) && (walkCount <= 3.0f * PI / 2.0f))) {
+        if (((tolerance < walkCount) && (walkCount <= PI / 2.0f)) || ((PI <= walkCount) && (walkCount <= 3.0f * PI / 2.0f))) {
             walkCount -= walkSpeed;
         }
-        else if (((PI / 2.0f <= walkCount) && (walkCount <= PI - walkSpeed)) || ((3.0f * PI / 2.0f <= walkCount) && (walkCount < 2.0f * PI - walkSpeed))) {
+        else if (((PI / 2.0f <= walkCount) && (walkCount <= PI)) || ((3.0f * PI / 2.0f <= walkCount) && (walkCount < 2.0f * PI - tolerance))) {
             walkCount += walkSpeed;
         }
         else {
@@ -306,7 +270,7 @@ int main() {
         player.y = pos_y;
 
         walkCount = updateWalkOffset(isWalking, walkCount);
-        float shakeIntensity = 10.0f;
+        float shakeIntensity = 20.0f;
         int walkOffset = floor(sinf(walkCount) * shakeIntensity);
         render(renderer, player, walkOffset);
 

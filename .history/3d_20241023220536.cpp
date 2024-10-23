@@ -81,43 +81,33 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset) {
         int stepY = (rayY < 0) ? -1 : 1;
 
         // Position initiale dans la grille
-        int testX = (int)player.x;
-        int testY = (int)player.y;
+        int testX = (int)player.x-1;
+        int testY = (int)player.y-1;
 
         // Calcul du premier point d'intersection avec la grille
         float sideDistX = (rayX < 0) ? (player.x - testX) * xUnit : (testX + 1.0f - player.x) * xUnit;
         float sideDistY = (rayY < 0) ? (player.y - testY) * yUnit : (testY + 1.0f - player.y) * yUnit;
 
-        // Nouvelle variable pour savoir si on touche un côté vertical ou horizontal
         bool hit = false;
-        bool hitVertical = false; // True si c'est un mur vertical, false si horizontal
         float distance = 0;
 
         while (!hit) {
             // Comparer les distances et avancer selon l'axe le plus proche
             if (sideDistX < sideDistY) {
-                sideDistX += xUnit;  // Prochaine intersection en X
-                testX += stepX;      // Avancer dans la direction X
-                hitVertical = true;  // On a frappé un mur vertical
+                sideDistX += xUnit; // Prochaine intersection en X
+                testX += stepX;     // Avancer dans la direction X
             } else {
-                sideDistY += yUnit;  // Prochaine intersection en Y
-                testY += stepY;      // Avancer dans la direction Y
-                hitVertical = false; // On a frappé un mur horizontal
+                sideDistY += yUnit; // Prochaine intersection en Y
+                testY += stepY;     // Avancer dans la direction Y
             }
 
             // Vérifier si on a touché un mur
             if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {
                 hit = true;
-                
-                // La distance finale est la distance sur l'axe qui a été touché en premier (X ou Y)
-                if (hitVertical) {
-                    distance = (testX - player.x + (1 - stepX) / 2) / rayX;
-                } else {
-                    distance = (testY - player.y + (1 - stepY) / 2) / rayY;
-                }
+                // La distance est la plus petite des deux côtés (X ou Y)
+                distance = (sideDistX < sideDistY) ? sideDistX : sideDistY;
             }
         }
-
         distance *= cos(player.angle - rayAngle);
 
         // v1 //
