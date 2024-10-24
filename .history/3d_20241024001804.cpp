@@ -36,19 +36,19 @@ struct Player {
     // float verticalFOV = 120 * PI / 180;
     
     float speed = 2.0f;
-    float thickness = 0.0f;
+    float thickness = 0.1f;
     float sensitivity = 0.0008f;
     float verticalSensitivity = 0.0008f;  // Sensibilité pour le mouvement vertical
 };
 
 float clamp(float value, float min, float max) {  
-    if (value < min) {
-        return min;
-    } else if (value > max) {
-        return max;
-    } else {
+    if (value < min) {  
+        return min;  
+    } else if (value > max) {  
+        return max;  
+    } else {  
         return value;
-    }
+    }  
 }
 
 void drawLine(SDL_Renderer* renderer, int x1, int y1, int x2, int y2) {
@@ -153,77 +153,46 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         
 
 
-        // float wallX;  // Position exacte sur le mur où le rayon a frappé
 
-        // if (hitVertical) {
-        //     wallX = player.y + distance * rayY;  // Intersection sur un mur vertical
-        // } else {
-        //     wallX = player.x + distance * rayX;  // Intersection sur un mur horizontal
-        // }
 
-        // wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
-        
+        float wallX;  // Position exacte sur le mur où le rayon a frappé
 
-        // int pitch = 0;
+        if (hitVertical) {
+            wallX = player.y + distance * rayY;  // Intersection sur un mur vertical
+        } else {
+            wallX = player.x + distance * rayX;  // Intersection sur un mur horizontal
+        }
 
-        // int texWidth = 16;   // Largeur de la texture
-        // int texHeight = 16;  // Hauteur de la texture
+        wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
 
-        // // Calculer la coordonnée X dans la texture
-        // int texX = int(wallX * float(texWidth));
-        // if (hitVertical && rayX > 0) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
-        // if (!hitVertical && rayY < 0) texX = texWidth - texX - 1; // Ajustement pour les murs horizontaux
+        int pitch = 0;
 
-        // // Dessiner la colonne de pixels correspondant à la texture
-        // for (int y = drawStart; y < drawEnd; y++) {
-        //     int d = y * 256 - HEIGHT * 128 + wallHeightScreen * 128;  // Distance dans la texture
-        //     int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer le pixel Y à utiliser dans la texture
+        int texWidth = 64;   // Largeur de la texture
+        int texHeight = 64;  // Hauteur de la texture
 
-        //     // Déclaration du pointeur pour accéder aux pixels
-        //     void* pixels = nullptr;
+        // Calculer la coordonnée X dans la texture
+        int texX = int(wallX * float(texWidth));
+        if (hitVertical && rayX > 0) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
+        if (!hitVertical && rayY < 0) texX = texWidth - texX - 1; // Ajustement pour les murs horizontaux
 
-        //     if (wallTexture == nullptr) {
-        //         printf("La texture est nulle : %s\n", SDL_GetError());
-        //     }
+        // Dessiner la colonne de pixels correspondant à la texture
+        for (int y = drawStart; y < drawEnd; y++) {
+            int d = y * 256 - HEIGHT * 128 + wallHeightScreen * 128;  // Distance dans la texture
+            int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer le pixel Y à utiliser dans la texture
 
-        //     // Verrouiller la texture pour accès direct aux pixels
-        //     if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) == 0) {
-        //         // Vérifiez que texY est dans les limites de la texture
-        //         if (texY < 0) texY = 0;
-        //         if (texY >= texHeight) texY = texHeight - 1;
+            // Déclaration du pointeur pour accéder aux pixels
+            void* pixels = nullptr;
 
-        //         // Calculer la position du pixel dans la texture
-        //         Uint32* pixelData = (Uint32*)pixels;  // Cast du pointeur de pixels en Uint32
-        //         Uint32 color = pixelData[texY * (pitch / 4) + texX];  // Diviser pitch par 4 car on accède à des Uint32
+            
+        }
 
-        //         // Déverrouiller la texture après modification/lecture
-        //         SDL_UnlockTexture(wallTexture);
-
-        //         // Exemple de vérification d'erreur après le verrouillage de la texture
-        //         if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) < 0) {
-        //             printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
-        //             continue; // Ignore cette itération et passe à la suivante
-        //         }
-
-        //         // Extraire les valeurs RGB du pixel
-        //         Uint8 r, g, b;
-        //         SDL_GetRGB(color, wallSurface->format, &r, &g, &b);  // Extraire les valeurs RGB
-        //         SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
-
-        //         // Dessiner le pixel à la position (x, y) sur l'écran
-        //         SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
-        //     } else {
-        //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
-        //     }
-        // }
-
-        // printf("SDL Error: %s\n", SDL_GetError());
+        printf("SDL Error: %s\n", SDL_GetError());
 
 
 
-        SDL_Color color = getColor(distance);
-        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-        drawLine(renderer, x, drawStart, x, drawEnd);
+        // SDL_Color color = getColor(distance);
+        // SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+        // drawLine(renderer, x, drawStart, x, drawEnd);
     }
 
     SDL_RenderPresent(renderer);
@@ -299,7 +268,6 @@ int main() {
     bool running = true;
     SDL_Event event;
 
-    // NUL
     Uint32 frameStart;
     int frameTime;
     int frameCount = 0;
@@ -394,7 +362,7 @@ int main() {
 
         walkCount = updateWalkOffset(isWalking, walkCount);
         float shakeIntensity = 10.0f;
-        int walkOffset = (int)floor(sinf(walkCount) * shakeIntensity);
+        int walkOffset = floor(sinf(walkCount) * shakeIntensity);
         render(renderer, player, walkOffset, wallSurface, wallTexture);
 
         frameTime = SDL_GetTicks() - frameStart;

@@ -29,26 +29,26 @@ int map[10][10] = {
 struct Player {
     float x;
     float y;
-    float angle;
+    float angle = 0;
     float pitch = 0;  // Nouvelle variable pour le "head pitch"
     float horizontalFOV = 70 * PI / 180;
     float verticalFOV = 2.0f*atanf(tan(horizontalFOV/2.0f)*ASPECT_RATIO);
     // float verticalFOV = 120 * PI / 180;
     
     float speed = 2.0f;
-    float thickness = 0.0f;
+    float thickness = 0.10f;
     float sensitivity = 0.0008f;
     float verticalSensitivity = 0.0008f;  // Sensibilité pour le mouvement vertical
 };
 
 float clamp(float value, float min, float max) {  
-    if (value < min) {
-        return min;
-    } else if (value > max) {
-        return max;
-    } else {
+    if (value < min) {  
+        return min;  
+    } else if (value > max) {  
+        return max;  
+    } else {  
         return value;
-    }
+    }  
 }
 
 void drawLine(SDL_Renderer* renderer, int x1, int y1, int x2, int y2) {
@@ -151,6 +151,8 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         int drawEnd = drawStart + wallHeightScreen;
         
         
+
+
 
 
         // float wallX;  // Position exacte sur le mur où le rayon a frappé
@@ -299,7 +301,6 @@ int main() {
     bool running = true;
     SDL_Event event;
 
-    // NUL
     Uint32 frameStart;
     int frameTime;
     int frameCount = 0;
@@ -394,7 +395,7 @@ int main() {
 
         walkCount = updateWalkOffset(isWalking, walkCount);
         float shakeIntensity = 10.0f;
-        int walkOffset = (int)floor(sinf(walkCount) * shakeIntensity);
+        int walkOffset = floor(sinf(walkCount) * shakeIntensity);
         render(renderer, player, walkOffset, wallSurface, wallTexture);
 
         frameTime = SDL_GetTicks() - frameStart;

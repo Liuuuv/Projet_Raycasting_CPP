@@ -153,6 +153,8 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         
 
 
+
+
         // float wallX;  // Position exacte sur le mur où le rayon a frappé
 
         // if (hitVertical) {

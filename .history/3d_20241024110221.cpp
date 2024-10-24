@@ -153,6 +153,8 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         
 
 
+
+
         // float wallX;  // Position exacte sur le mur où le rayon a frappé
 
         // if (hitVertical) {
@@ -299,7 +301,6 @@ int main() {
     bool running = true;
     SDL_Event event;
 
-    // NUL
     Uint32 frameStart;
     int frameTime;
     int frameCount = 0;
@@ -394,7 +395,7 @@ int main() {
 
         walkCount = updateWalkOffset(isWalking, walkCount);
         float shakeIntensity = 10.0f;
-        int walkOffset = (int)floor(sinf(walkCount) * shakeIntensity);
+        int walkOffset = floor(sinf(walkCount) * shakeIntensity);
         render(renderer, player, walkOffset, wallSurface, wallTexture);
 
         frameTime = SDL_GetTicks() - frameStart;
