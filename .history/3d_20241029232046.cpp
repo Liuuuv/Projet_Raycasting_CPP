@@ -86,8 +86,8 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         int testY = (int)player.y;
 
         // Calcul du premier point d'intersection avec la grille
-        float sideDistX = (rayX < 0) ? (player.x - testX) * xUnit : (testX + 1.0f - player.x) * xUnit;
-        float sideDistY = (rayY < 0) ? (player.y - testY) * yUnit : (testY + 1.0f - player.y) * yUnit;
+        float distanceX = (rayX < 0) ? (player.x - testX) * xUnit : (testX + 1.0f - player.x) * xUnit;
+        float distanceY = (rayY < 0) ? (player.y - testY) * yUnit : (testY + 1.0f - player.y) * yUnit;
 
         // Nouvelle variable pour savoir si on touche un côté vertical ou horizontal
         bool hit = false;
@@ -99,15 +99,15 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
             if (sideDistX < sideDistY) {
                 sideDistX += xUnit;  // Prochaine intersection en X
                 testX += stepX;      // Avancer dans la direction X
-                hitVertical = true;  // On a frappé un potentiel mur vertical
+                hitVertical = true;  // On a frappé un mur vertical
             } else {
                 sideDistY += yUnit;  // Prochaine intersection en Y
                 testY += stepY;      // Avancer dans la direction Y
-                hitVertical = false; // On a frappé un potentiel mur horizontal
+                hitVertical = false; // On a frappé un mur horizontal
             }
 
             // Vérifier si on a touché un mur
-            if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {  // rester dans la grille + verifier mur touché
+            if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {
                 hit = true;
                 
                 // La distance finale est la distance sur l'axe qui a été touché en premier (X ou Y)
@@ -153,106 +153,77 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         
 
 
+        // float wallX;  // Position exacte sur le mur où le rayon a frappé
+
+        // if (hitVertical) {
+        //     wallX = player.y + distance * rayY;  // Intersection sur un mur vertical
+        // } else {
+        //     wallX = player.x + distance * rayX;  // Intersection sur un mur horizontal
+        // }
+
+        // wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
         
 
-        float wallX;  // Position exacte sur le mur où le rayon a frappé
-        if (hitVertical) {
-            wallX = player.y + distance * rayY;  // Intersection sur un mur vertical
-        } else {
-            wallX = player.x + distance * rayX;  // Intersection sur un mur horizontal
-        }
-        // printf("X %f\n",wallX);
+        // int pitch = 0;
 
-        wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
-        // printf("X %f\n",wallX);
-        
+        // int texWidth = 16;   // Largeur de la texture
+        // int texHeight = 16;  // Hauteur de la texture
 
-        int pitch = 0;
+        // // Calculer la coordonnée X dans la texture
+        // int texX = int(wallX * float(texWidth));
+        // if (hitVertical && rayX > 0) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
+        // if (!hitVertical && rayY < 0) texX = texWidth - texX - 1; // Ajustement pour les murs horizontaux
 
-        int texWidth = 16;   // Largeur de la texture
-        int texHeight = 16;  // Hauteur de la texture
+        // // Dessiner la colonne de pixels correspondant à la texture
+        // for (int y = drawStart; y < drawEnd; y++) {
+        //     int d = y * 256 - HEIGHT * 128 + wallHeightScreen * 128;  // Distance dans la texture
+        //     int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer le pixel Y à utiliser dans la texture
 
-        // Calculer la coordonnée X dans la texture
-        int texX = int(wallX * float(texWidth));
+        //     // Déclaration du pointeur pour accéder aux pixels
+        //     void* pixels = nullptr;
 
-        texX = texWidth - texX;
-        if (texX < 0) texX = 0;
-        if (texX >= texHeight) texX = texWidth - 1;
-        // printf("X %f\n",(float)texX);
+        //     if (wallTexture == nullptr) {
+        //         printf("La texture est nulle : %s\n", SDL_GetError());
+        //     }
 
-        // printf("%f\n",texX);
-        if (hitVertical && rayX > 0) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
-        if (!hitVertical && rayY < 0) texX = texWidth - texX - 1; // Ajustement pour les murs horizontaux
+        //     // Verrouiller la texture pour accès direct aux pixels
+        //     if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) == 0) {
+        //         // Vérifiez que texY est dans les limites de la texture
+        //         if (texY < 0) texY = 0;
+        //         if (texY >= texHeight) texY = texHeight - 1;
 
-        Uint32* pixels = (Uint32*)wallSurface->pixels;  // Uint32 si la surface est en 32 bits
+        //         // Calculer la position du pixel dans la texture
+        //         Uint32* pixelData = (Uint32*)pixels;  // Cast du pointeur de pixels en Uint32
+        //         Uint32 color = pixelData[texY * (pitch / 4) + texX];  // Diviser pitch par 4 car on accède à des Uint32
 
-        Uint8 r, g, b;
-        // Dessiner la colonne de pixels correspondant à la texture
-        for (int y = drawStart; y < drawEnd; y++) {
-            int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128;  // Distance dans la texture
-            int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer le pixel Y à utiliser dans la texture
-            
-            // printf("Y %f\n",(float)texY);
+        //         // Déverrouiller la texture après modification/lecture
+        //         SDL_UnlockTexture(wallTexture);
 
-            if (texY < 0) texY = 0;
-            if (texY >= texHeight) texY = texHeight - 1;
- 
-            Uint32 pixel = pixels[texX + texWidth * texY];
+        //         // Exemple de vérification d'erreur après le verrouillage de la texture
+        //         if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) < 0) {
+        //             printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
+        //             continue; // Ignore cette itération et passe à la suivante
+        //         }
 
-            
-            SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
-            // printf("f\n",r);
-            SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
+        //         // Extraire les valeurs RGB du pixel
+        //         Uint8 r, g, b;
+        //         SDL_GetRGB(color, wallSurface->format, &r, &g, &b);  // Extraire les valeurs RGB
+        //         SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
 
-            // Dessiner le pixel à la position (x, y) sur l'écran
-            SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
-
-
-            // // Déclaration du pointeur pour accéder aux pixels
-            // void* pixels = NULL;
-            
-            // // Verrouiller la texture pour accès direct aux pixels
-            // if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) == 0) {
-            //     // Vérifiez que texY est dans les limites de la texture
-            //     if (texY < 0) texY = 0;
-            //     if (texY >= texHeight) texY = texHeight - 1;
-                
-            //     printf("a");
-                
-
-            //     // Calculer la position du pixel dans la texture
-            //     Uint32* pixelData = (Uint32*)pixels;  // Cast du pointeur de pixels en Uint32
-            //     Uint32 color = pixelData[texY * (pitch / 4) + texX];  // Diviser pitch par 4 car on accède à des Uint32
-
-            //     // Déverrouiller la texture après modification/lecture
-            //     SDL_UnlockTexture(wallTexture);
-
-            //     // Exemple de vérification d'erreur après le verrouillage de la texture
-            //     if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) < 0) {
+        //         // Dessiner le pixel à la position (x, y) sur l'écran
+        //         SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
+        //     } else {
             //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
-            //         continue; // Ignore cette itération et passe à la suivante
-            //     }
-
-            //     // Extraire les valeurs RGB du pixel
-            //     Uint8 r, g, b;
-            //     SDL_GetRGB(color, wallSurface->format, &r, &g, &b);  // Extraire les valeurs RGB
-            //     // printf("f\n",r);
-            //     SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
-
-            //     // Dessiner le pixel à la position (x, y) sur l'écran
-            //     SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
-            // } else {
-            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
-            // }
-        }
+        //     }
+        // }
 
         // printf("SDL Error: %s\n", SDL_GetError());
 
 
 
-        // SDL_Color color = getColor(distance);
-        // SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-        // drawLine(renderer, x, drawStart, x, drawEnd);
+        SDL_Color color = getColor(distance);
+        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+        drawLine(renderer, x, drawStart, x, drawEnd);
     }
 
     SDL_RenderPresent(renderer);
@@ -298,13 +269,13 @@ float updateWalkOffset(bool isWalking, float walkCount) {
     return walkCount;
 }
 
-void loadSurfaces(SDL_Renderer* renderer, SDL_Surface** wallSurface) {
-    // *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
-    *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\hey.bmp");
-    if (wallSurface==NULL) {
-    printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
+void loadTextures(SDL_Renderer* renderer, SDL_Surface* wallSurface, SDL_Texture* wallTexture) {
+    wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
+    wallTexture = SDL_CreateTextureFromSurface(renderer, wallSurface);
+    if (!wallTexture) {
+        printf("Erreur de creation de la texture : %s\n", SDL_GetError());
     }
-    *wallSurface = SDL_ConvertSurfaceFormat(*wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
+    SDL_FreeSurface(wallSurface);
 }
 
 int main() {
@@ -340,19 +311,7 @@ int main() {
     
     SDL_Surface* wallSurface;
     SDL_Texture* wallTexture;
-    loadSurfaces(renderer, &wallSurface);
-
-    // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
-    // if (wallSurface==NULL) {
-    // printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
-    // }
-    // wallSurface = SDL_ConvertSurfaceFormat(wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
-
-    // wallTexture = SDL_CreateTextureFromSurface(renderer, wallSurface);
-    // if (wallTexture == NULL) {
-    //     printf("Erreur de creation de la texture : %s\n", SDL_GetError());
-    // }
-    // SDL_FreeSurface(wallSurface);
+    loadTextures(renderer, wallSurface, wallTexture);
 
     while (running) {
         

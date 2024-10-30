@@ -153,60 +153,44 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         
 
 
-        
-
         float wallX;  // Position exacte sur le mur où le rayon a frappé
+
         if (hitVertical) {
             wallX = player.y + distance * rayY;  // Intersection sur un mur vertical
         } else {
             wallX = player.x + distance * rayX;  // Intersection sur un mur horizontal
         }
-        // printf("X %f\n",wallX);
 
         wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
-        // printf("X %f\n",wallX);
         
 
-        int pitch = 0;
+        int pitch = 8;
 
         int texWidth = 16;   // Largeur de la texture
         int texHeight = 16;  // Hauteur de la texture
 
         // Calculer la coordonnée X dans la texture
         int texX = int(wallX * float(texWidth));
+        // if (hitVertical && rayX > 0) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
+        // if (!hitVertical && rayY < 0) texX = texWidth - texX - 1; // Ajustement pour les murs horizontaux
 
-        texX = texWidth - texX;
-        if (texX < 0) texX = 0;
-        if (texX >= texHeight) texX = texWidth - 1;
-        // printf("X %f\n",(float)texX);
+        Uint32* pixels = (Uint32*)wallTexture->pixels;  // Uint32 si la surface est en 32 bits
 
-        // printf("%f\n",texX);
-        if (hitVertical && rayX > 0) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
-        if (!hitVertical && rayY < 0) texX = texWidth - texX - 1; // Ajustement pour les murs horizontaux
-
-        Uint32* pixels = (Uint32*)wallSurface->pixels;  // Uint32 si la surface est en 32 bits
-
-        Uint8 r, g, b;
         // Dessiner la colonne de pixels correspondant à la texture
         for (int y = drawStart; y < drawEnd; y++) {
-            int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128;  // Distance dans la texture
+            int d = y * 256 - HEIGHT * 128 + wallHeightScreen * 128;  // Distance dans la texture
             int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer le pixel Y à utiliser dans la texture
-            
-            // printf("Y %f\n",(float)texY);
+            // printf("%f\n",(float)texY);
 
-            if (texY < 0) texY = 0;
-            if (texY >= texHeight) texY = texHeight - 1;
- 
-            Uint32 pixel = pixels[texX + texWidth * texY];
+            Uint32 pixel = pixels[texY + texWidth * testX];
 
-            
-            SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
+            Uint8 r, g, b;
+            SDL_GetRGB(pixel, wallTexture->format, &r, &g, &b);
             // printf("f\n",r);
             SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
 
             // Dessiner le pixel à la position (x, y) sur l'écran
             SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
-
 
             // // Déclaration du pointeur pour accéder aux pixels
             // void* pixels = NULL;
@@ -246,13 +230,13 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
             // }
         }
 
-        // printf("SDL Error: %s\n", SDL_GetError());
+        printf("SDL Error: %s\n", SDL_GetError());
 
 
 
-        // SDL_Color color = getColor(distance);
-        // SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-        // drawLine(renderer, x, drawStart, x, drawEnd);
+        SDL_Color color = getColor(distance);
+        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+        drawLine(renderer, x, drawStart, x, drawEnd);
     }
 
     SDL_RenderPresent(renderer);
@@ -298,13 +282,13 @@ float updateWalkOffset(bool isWalking, float walkCount) {
     return walkCount;
 }
 
-void loadSurfaces(SDL_Renderer* renderer, SDL_Surface** wallSurface) {
-    // *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
-    *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\hey.bmp");
-    if (wallSurface==NULL) {
-    printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
+void loadTextures(SDL_Renderer* renderer, SDL_Surface* wallSurface, SDL_Texture* wallTexture) {
+    wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
+    wallTexture = SDL_CreateTextureFromSurface(renderer, wallSurface);
+    if (wallTexture == NULL) {
+        printf("Erreur de creation de la texture : %s\n", SDL_GetError());
     }
-    *wallSurface = SDL_ConvertSurfaceFormat(*wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
+    SDL_FreeSurface(wallSurface);
 }
 
 int main() {
@@ -340,14 +324,12 @@ int main() {
     
     SDL_Surface* wallSurface;
     SDL_Texture* wallTexture;
-    loadSurfaces(renderer, &wallSurface);
+    // loadTextures(renderer, wallSurface, wallTexture);
 
-    // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
-    // if (wallSurface==NULL) {
-    // printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
-    // }
-    // wallSurface = SDL_ConvertSurfaceFormat(wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
-
+    wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
+    if (wallSurface==NULL) {
+    printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
+}
     // wallTexture = SDL_CreateTextureFromSurface(renderer, wallSurface);
     // if (wallTexture == NULL) {
     //     printf("Erreur de creation de la texture : %s\n", SDL_GetError());

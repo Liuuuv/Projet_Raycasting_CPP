@@ -174,10 +174,6 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
 
         // Calculer la coordonnée X dans la texture
         int texX = int(wallX * float(texWidth));
-
-        texX = texWidth - texX;
-        if (texX < 0) texX = 0;
-        if (texX >= texHeight) texX = texWidth - 1;
         // printf("X %f\n",(float)texX);
 
         // printf("%f\n",texX);
@@ -196,6 +192,7 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
 
             if (texY < 0) texY = 0;
             if (texY >= texHeight) texY = texHeight - 1;
+            texX = texWidth - texX;
  
             Uint32 pixel = pixels[texX + texWidth * texY];
 

@@ -174,10 +174,6 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
 
         // Calculer la coordonnée X dans la texture
         int texX = int(wallX * float(texWidth));
-
-        texX = texWidth - texX;
-        if (texX < 0) texX = 0;
-        if (texX >= texHeight) texX = texWidth - 1;
         // printf("X %f\n",(float)texX);
 
         // printf("%f\n",texX);
@@ -298,13 +294,14 @@ float updateWalkOffset(bool isWalking, float walkCount) {
     return walkCount;
 }
 
-void loadSurfaces(SDL_Renderer* renderer, SDL_Surface** wallSurface) {
-    // *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
-    *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\hey.bmp");
-    if (wallSurface==NULL) {
-    printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
+void loadTextures(SDL_Renderer* renderer, SDL_Surface* wallSurface, SDL_Texture* wallTexture) {
+    // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
+    wallSurface = SDL_LoadFile("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\hey.png");
+    wallTexture = SDL_CreateTextureFromSurface(renderer, wallSurface);
+    if (wallTexture == NULL) {
+        printf("Erreur de creation de la texture : %s\n", SDL_GetError());
     }
-    *wallSurface = SDL_ConvertSurfaceFormat(*wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
+    SDL_FreeSurface(wallSurface);
 }
 
 int main() {
@@ -340,14 +337,13 @@ int main() {
     
     SDL_Surface* wallSurface;
     SDL_Texture* wallTexture;
-    loadSurfaces(renderer, &wallSurface);
+    // loadTextures(renderer, wallSurface, wallTexture);
 
-    // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
-    // if (wallSurface==NULL) {
-    // printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
-    // }
-    // wallSurface = SDL_ConvertSurfaceFormat(wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
-
+    wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
+    if (wallSurface==NULL) {
+    printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
+    }
+    wallSurface = SDL_ConvertSurfaceFormat(wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
     // wallTexture = SDL_CreateTextureFromSurface(renderer, wallSurface);
     // if (wallTexture == NULL) {
     //     printf("Erreur de creation de la texture : %s\n", SDL_GetError());
