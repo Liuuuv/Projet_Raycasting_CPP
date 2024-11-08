@@ -17,8 +17,6 @@ const int TARGET_FPS = 144;
 const int FRAME_DELAY = 1000 / TARGET_FPS;
 const float DELTA_TIME = 1.0f/TARGET_FPS;
 
-
-
 int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -425,7 +423,7 @@ int main() {
         std::stringstream ss;
         ss << "FPS: " << avgFPS;
         SDL_Color textColor = {255, 255, 255, 255};
-        renderText(renderer, font, ss.str(), textColor, 10, 10);
+        // renderText(renderer, font, ss.str(), textColor, 10, 10);
 
         SDL_RenderPresent(renderer);
 

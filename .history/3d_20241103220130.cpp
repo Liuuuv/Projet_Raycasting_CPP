@@ -17,8 +17,6 @@ const int TARGET_FPS = 144;
 const int FRAME_DELAY = 1000 / TARGET_FPS;
 const float DELTA_TIME = 1.0f/TARGET_FPS;
 
-
-
 int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -67,10 +65,10 @@ float getIntensity(float distance) {
     // return {colorValue, colorValue, colorValue, 255};
 }
 
-float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture) {
+float sendRay(Player player, int RayNumber, float *distance, bool *flipTexture) {
     
-    float rayX = cos(rayAngle);
-    float rayY = sin(rayAngle);
+    float rayX = cosArray[RayNumber];
+    float rayY = sinArray[RayNumber];
 
     // Calcul des pas unitaires pour avancer dans les axes X et Y
     float xUnit = sqrtf(1 + powf(rayY / rayX, 2)); // Combien d'unités en X on parcourt
@@ -132,24 +130,39 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
     if (hitVertical && rayX > 0) *flipTexture = true;  // Ajustement si le mur est vertical et la direction est opposée
     if (not hitVertical && rayY < 0) *flipTexture = true; // Ajustement pour les murs horizontaux
 
-    *distance *= cos(player.angle - rayAngle);
+    *distance *= cos(player.angle - rayAngles[RayNumber]);
     
     return wallX;
 }
- 
+
+const int numRayX = 500;
+float cosArray[numRayX];
+float sinArray[numRayX];
+float rayAngles[numRayX];
+const int pasX = HEIGHT / numRayX;
+
+void calculateCosSinRayAngle(Player player) {
+    float rayAngle;
+    for (int x = 0; x < WIDTH; x = x + pasX) {
+            rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;
+            cosArray[x] = cosf(rayAngle);
+            sinArray[x] = sinf(rayAngle); 
+            rayAngles[x] = rayAngle;
+    }
+}
+
 void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* wallSurface, SDL_Texture* wallTexture) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
     float distance = 0.0f;
     bool flipTexture;
-    int pasX = 1;  // épaisseurs des bandes
+    int x = 0;
     
-    for (int x = 0; x < WIDTH; x = x + pasX) {
-        float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;
+    for (int rayNumber = 0; rayNumber < numRayX; rayNumber++) {
         flipTexture = false;
-        float wallX = sendRay(player, rayAngle, &distance, &flipTexture);
-                
+        float wallX = sendRay(player, rayNumber, &distance, &flipTexture);
+        x += pasX;
 
         // v3  ## CALCUL D'OU TRACER LES BANDES DES MURS ##
         float shakeIntensity = 5.0f;   // marche
@@ -321,6 +334,8 @@ int main() {
     SDL_Surface *wallSurface;
     SDL_Texture *wallTexture;
     loadSurfaces(renderer, &wallSurface);
+
+    calculateCosSinRayAngle(player);
 
     // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
     // if (wallSurface==NULL) {

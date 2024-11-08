@@ -7,7 +7,6 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include "liste.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -16,8 +15,6 @@ const float PI = 3.14159265f;
 const int TARGET_FPS = 144;
 const int FRAME_DELAY = 1000 / TARGET_FPS;
 const float DELTA_TIME = 1.0f/TARGET_FPS;
-
-
 
 int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -39,7 +36,7 @@ struct Player {
     // float verticalFOV = 120 * PI / 180;
     
     float speed = 2.0f;
-    float thickness = 0.2f;
+    float thickness = 0.1f;
     float sensitivity = 0.0008f;
     float verticalSensitivity = 0.0008f;  // Sensibilité pour le mouvement vertical
 };
@@ -91,7 +88,7 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
     // Nouvelle variable pour savoir si on touche un côté vertical ou horizontal
     bool hit = false;
     bool hitVertical = false; // True si c'est un mur vertical, false si horizontal
-    
+    float distance = 0;
 
     while (!hit) {
         // Comparer les distances et avancer selon l'axe le plus proche
@@ -128,28 +125,38 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
 
     wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
     // printf("X %f\n",wallX);
-
-    if (hitVertical && rayX > 0) *flipTexture = true;  // Ajustement si le mur est vertical et la direction est opposée
-    if (not hitVertical && rayY < 0) *flipTexture = true; // Ajustement pour les murs horizontaux
-
-    *distance *= cos(player.angle - rayAngle);
     
     return wallX;
 }
- 
+
 void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* wallSurface, SDL_Texture* wallTexture) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    float distance = 0.0f;
+    float distance;
     bool flipTexture;
-    int pasX = 1;  // épaisseurs des bandes
-    
+    int pasX = 10;  // épaisseurs des bandes
     for (int x = 0; x < WIDTH; x = x + pasX) {
         float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;
-        flipTexture = false;
         float wallX = sendRay(player, rayAngle, &distance, &flipTexture);
-                
+
+        
+
+        distance *= cos(player.angle - rayAngle);
+
+        // v1 //
+        // int wallHeight = (int)(HEIGHT / (distance + 0.0001));
+        // int drawStart = (HEIGHT - wallHeight) / 2 + player.pitch*0;
+        // int drawEnd = drawStart + wallHeight;
+
+        // v2 //
+        // float wallHeight =  1.0f;    // Hauteur du mur dans le jeu
+        // float wallProportionScreen = wallHeight/ (distance * tanf(player.verticalFOV/2.0f));
+        
+        // int wallHeightScreen = (int)floor(wallProportionScreen * HEIGHT);
+        // int drawStart = HEIGHT/2 - (int)floor(wallProportionScreen * HEIGHT) + player.pitch*100;
+        // int drawEnd = drawStart + wallHeightScreen;
+
 
         // v3  ## CALCUL D'OU TRACER LES BANDES DES MURS ##
         float shakeIntensity = 5.0f;   // marche
@@ -188,14 +195,15 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         // printf("X %f\n",(float)texX);
 
         // printf("%f\n",texX);
-        if (flipTexture == true) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
+        if (hitVertical && rayX > 0) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
+        if (!hitVertical && rayY < 0) texX = texWidth - texX - 1; // Ajustement pour les murs horizontaux
 
         Uint32* pixels = (Uint32*)wallSurface->pixels;  // Uint32 si la surface est en 32 bits
 
         Uint8 r, g, b;
         Uint32 pixel;
         int formerTexY;
-        int pasY = 1;
+        int pasY = 10;
         // Dessiner la colonne de pixels correspondant à la texture
         for (int y = drawStart; y < drawEnd; y=y+pasY) {
             int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
@@ -224,6 +232,43 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
             SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
             formerTexY = texY;
 
+
+            // // Déclaration du pointeur pour accéder aux pixels
+            // void* pixels = NULL;
+            
+            // // Verrouiller la texture pour accès direct aux pixels
+            // if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) == 0) {
+            //     // Vérifiez que texY est dans les limites de la texture
+            //     if (texY < 0) texY = 0;
+            //     if (texY >= texHeight) texY = texHeight - 1;
+                
+            //     printf("a");
+                
+
+            //     // Calculer la position du pixel dans la texture
+            //     Uint32* pixelData = (Uint32*)pixels;  // Cast du pointeur de pixels en Uint32
+            //     Uint32 color = pixelData[texY * (pitch / 4) + texX];  // Diviser pitch par 4 car on accède à des Uint32
+
+            //     // Déverrouiller la texture après modification/lecture
+            //     SDL_UnlockTexture(wallTexture);
+
+            //     // Exemple de vérification d'erreur après le verrouillage de la texture
+            //     if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) < 0) {
+            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
+            //         continue; // Ignore cette itération et passe à la suivante
+            //     }
+
+            //     // Extraire les valeurs RGB du pixel
+            //     Uint8 r, g, b;
+            //     SDL_GetRGB(color, wallSurface->format, &r, &g, &b);  // Extraire les valeurs RGB
+            //     // printf("f\n",r);
+            //     SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
+
+            //     // Dessiner le pixel à la position (x, y) sur l'écran
+            //     SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
+            // } else {
+            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
+            // }
         }
 
         // printf("SDL Error: %s\n", SDL_GetError());
@@ -318,8 +363,8 @@ int main() {
     float walkCount = 0.0f;
 
     
-    SDL_Surface *wallSurface;
-    SDL_Texture *wallTexture;
+    SDL_Surface* wallSurface;
+    SDL_Texture* wallTexture;
     loadSurfaces(renderer, &wallSurface);
 
     // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");

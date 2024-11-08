@@ -17,8 +17,6 @@ const int TARGET_FPS = 144;
 const int FRAME_DELAY = 1000 / TARGET_FPS;
 const float DELTA_TIME = 1.0f/TARGET_FPS;
 
-
-
 int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -136,14 +134,16 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
     
     return wallX;
 }
- 
+
+const int numRayX = 500;
+
 void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* wallSurface, SDL_Texture* wallTexture) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
     float distance = 0.0f;
     bool flipTexture;
-    int pasX = 1;  // épaisseurs des bandes
+    int pasX = HEIGHT / numRayX;  // épaisseurs des bandes
     
     for (int x = 0; x < WIDTH; x = x + pasX) {
         float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;

@@ -7,7 +7,6 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include "liste.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -16,8 +15,6 @@ const float PI = 3.14159265f;
 const int TARGET_FPS = 144;
 const int FRAME_DELAY = 1000 / TARGET_FPS;
 const float DELTA_TIME = 1.0f/TARGET_FPS;
-
-
 
 int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -34,12 +31,12 @@ struct Player {
     float y;
     float angle;
     float pitch = 0;  // Nouvelle variable pour le "head pitch"
-    float horizontalFOV = 65 * PI / 180;
+    float horizontalFOV = 70 * PI / 180;
     float verticalFOV = 2.0f*atanf(tan(horizontalFOV/2.0f)*ASPECT_RATIO);
     // float verticalFOV = 120 * PI / 180;
     
     float speed = 2.0f;
-    float thickness = 0.2f;
+    float thickness = 0.1f;
     float sensitivity = 0.0008f;
     float verticalSensitivity = 0.0008f;  // Sensibilité pour le mouvement vertical
 };
@@ -58,98 +55,85 @@ void drawLine(SDL_Renderer* renderer, int x1, int y1, int x2, int y2) {
     SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
 }
 
-float getIntensity(float distance) {
+SDL_Color getColor(float distance) {
     float maxDistance = 5.0f;
     float intensity = fmin(distance / maxDistance, 1.0f);
-    intensity = 1 - intensity;
-    return intensity;
-    // Uint8 colorValue = static_cast<Uint8>((1 - intensity) * 230);
-    // return {colorValue, colorValue, colorValue, 255};
+    Uint8 colorValue = static_cast<Uint8>((1 - intensity) * 230);
+    return {colorValue, colorValue, colorValue, 255};
 }
 
-float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture) {
-    
-    float rayX = cos(rayAngle);
-    float rayY = sin(rayAngle);
-
-    // Calcul des pas unitaires pour avancer dans les axes X et Y
-    float xUnit = sqrtf(1 + powf(rayY / rayX, 2)); // Combien d'unités en X on parcourt
-    float yUnit = sqrtf(1 + powf(rayX / rayY, 2)); // Combien d'unités en Y on parcourt
-
-    // Détermination des directions (avancer ou reculer)
-    int stepX = (rayX < 0) ? -1 : 1;
-    int stepY = (rayY < 0) ? -1 : 1;
-
-    // Position initiale dans la grille
-    int testX = (int)player.x;
-    int testY = (int)player.y;
-
-    // Calcul du premier point d'intersection avec la grille
-    float sideDistX = (rayX < 0) ? (player.x - testX) * xUnit : (testX + 1.0f - player.x) * xUnit;
-    float sideDistY = (rayY < 0) ? (player.y - testY) * yUnit : (testY + 1.0f - player.y) * yUnit;
-
-    // Nouvelle variable pour savoir si on touche un côté vertical ou horizontal
-    bool hit = false;
-    bool hitVertical = false; // True si c'est un mur vertical, false si horizontal
-    
-
-    while (!hit) {
-        // Comparer les distances et avancer selon l'axe le plus proche
-        if (sideDistX < sideDistY) {
-            sideDistX += xUnit;  // Prochaine intersection en X
-            testX += stepX;      // Avancer dans la direction X
-            hitVertical = true;  // On a frappé un potentiel mur vertical
-        } else {
-            sideDistY += yUnit;  // Prochaine intersection en Y
-            testY += stepY;      // Avancer dans la direction Y
-            hitVertical = false; // On a frappé un potentiel mur horizontal
-        }
-
-        // Vérifier si on a touché un mur
-        if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {  // rester dans la grille + verifier mur touché
-            hit = true;
-            
-            // La distance finale est la distance sur l'axe qui a été touché en premier (X ou Y)
-            if (hitVertical) {
-                *distance = (testX - player.x + (1 - stepX) / 2) / rayX;
-            } else {
-                *distance = (testY - player.y + (1 - stepY) / 2) / rayY;
-            }
-        }
-    }
-
-    float wallX;  // Position exacte sur le mur où le rayon a frappé
-    if (hitVertical) {
-        wallX = player.y + *distance * rayY;  // Intersection sur un mur vertical
-    } else {
-        wallX = player.x + *distance * rayX;  // Intersection sur un mur horizontal
-    }
-    // printf("X %f\n",wallX);
-
-    wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
-    // printf("X %f\n",wallX);
-
-    if (hitVertical && rayX > 0) *flipTexture = true;  // Ajustement si le mur est vertical et la direction est opposée
-    if (not hitVertical && rayY < 0) *flipTexture = true; // Ajustement pour les murs horizontaux
-
-    *distance *= cos(player.angle - rayAngle);
-    
-    return wallX;
-}
- 
 void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* wallSurface, SDL_Texture* wallTexture) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    float distance = 0.0f;
-    bool flipTexture;
-    int pasX = 1;  // épaisseurs des bandes
+
     
-    for (int x = 0; x < WIDTH; x = x + pasX) {
+    for (int x = 0; x < WIDTH; x++) {
         float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;
-        flipTexture = false;
-        float wallX = sendRay(player, rayAngle, &distance, &flipTexture);
+        float rayX = cos(rayAngle);
+        float rayY = sin(rayAngle);
+
+        // Calcul des pas unitaires pour avancer dans les axes X et Y
+        float xUnit = sqrtf(1 + powf(rayY / rayX, 2)); // Combien d'unités en X on parcourt
+        float yUnit = sqrtf(1 + powf(rayX / rayY, 2)); // Combien d'unités en Y on parcourt
+
+        // Détermination des directions (avancer ou reculer)
+        int stepX = (rayX < 0) ? -1 : 1;
+        int stepY = (rayY < 0) ? -1 : 1;
+
+        // Position initiale dans la grille
+        int testX = (int)player.x;
+        int testY = (int)player.y;
+
+        // Calcul du premier point d'intersection avec la grille
+        float sideDistX = (rayX < 0) ? (player.x - testX) * xUnit : (testX + 1.0f - player.x) * xUnit;
+        float sideDistY = (rayY < 0) ? (player.y - testY) * yUnit : (testY + 1.0f - player.y) * yUnit;
+
+        // Nouvelle variable pour savoir si on touche un côté vertical ou horizontal
+        bool hit = false;
+        bool hitVertical = false; // True si c'est un mur vertical, false si horizontal
+        float distance = 0;
+
+        while (!hit) {
+            // Comparer les distances et avancer selon l'axe le plus proche
+            if (sideDistX < sideDistY) {
+                sideDistX += xUnit;  // Prochaine intersection en X
+                testX += stepX;      // Avancer dans la direction X
+                hitVertical = true;  // On a frappé un potentiel mur vertical
+            } else {
+                sideDistY += yUnit;  // Prochaine intersection en Y
+                testY += stepY;      // Avancer dans la direction Y
+                hitVertical = false; // On a frappé un potentiel mur horizontal
+            }
+
+            // Vérifier si on a touché un mur
+            if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {  // rester dans la grille + verifier mur touché
+                hit = true;
                 
+                // La distance finale est la distance sur l'axe qui a été touché en premier (X ou Y)
+                if (hitVertical) {
+                    distance = (testX - player.x + (1 - stepX) / 2) / rayX;
+                } else {
+                    distance = (testY - player.y + (1 - stepY) / 2) / rayY;
+                }
+            }
+        }
+
+        distance *= cos(player.angle - rayAngle);
+
+        // v1 //
+        // int wallHeight = (int)(HEIGHT / (distance + 0.0001));
+        // int drawStart = (HEIGHT - wallHeight) / 2 + player.pitch*0;
+        // int drawEnd = drawStart + wallHeight;
+
+        // v2 //
+        // float wallHeight =  1.0f;    // Hauteur du mur dans le jeu
+        // float wallProportionScreen = wallHeight/ (distance * tanf(player.verticalFOV/2.0f));
+        
+        // int wallHeightScreen = (int)floor(wallProportionScreen * HEIGHT);
+        // int drawStart = HEIGHT/2 - (int)floor(wallProportionScreen * HEIGHT) + player.pitch*100;
+        // int drawEnd = drawStart + wallHeightScreen;
+
 
         // v3  ## CALCUL D'OU TRACER LES BANDES DES MURS ##
         float shakeIntensity = 5.0f;   // marche
@@ -171,7 +155,16 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
 
         
 
-        
+        float wallX;  // Position exacte sur le mur où le rayon a frappé
+        if (hitVertical) {
+            wallX = player.y + distance * rayY;  // Intersection sur un mur vertical
+        } else {
+            wallX = player.x + distance * rayX;  // Intersection sur un mur horizontal
+        }
+        // printf("X %f\n",wallX);
+
+        wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
+        // printf("X %f\n",wallX);
         
 
         int pitch = 0;
@@ -188,42 +181,69 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         // printf("X %f\n",(float)texX);
 
         // printf("%f\n",texX);
-        if (flipTexture == true) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
+        if (hitVertical && rayX > 0) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
+        if (!hitVertical && rayY < 0) texX = texWidth - texX - 1; // Ajustement pour les murs horizontaux
 
         Uint32* pixels = (Uint32*)wallSurface->pixels;  // Uint32 si la surface est en 32 bits
 
         Uint8 r, g, b;
-        Uint32 pixel;
-        int formerTexY;
-        int pasY = 1;
         // Dessiner la colonne de pixels correspondant à la texture
-        for (int y = drawStart; y < drawEnd; y=y+pasY) {
-            int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
+        for (int y = drawStart; y < drawEnd; y++) {
+            int d = y * 10 - HEIGHT * 5 + verticalOffset * 10 + wallHeightScreen * 5;  // Distance dans la texture
             int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer le pixel Y à utiliser dans la texture
             
             // printf("Y %f\n",(float)texY);
 
             if (texY < 0) texY = 0;
             if (texY >= texHeight) texY = texHeight - 1;
+ 
+            Uint32 pixel = pixels[texX + texWidth * texY];
 
-            // Si besoin de changer de couleur
-            if (texY != formerTexY) {
-                pixel = pixels[texX + texWidth * texY];
-
-                SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
-                float intensity = getIntensity(distance);
-                r *= intensity;
-                g *= intensity;
-                b *= intensity;
-                // printf("f\n",r);
-                SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
-            }
             
+            SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
+            // printf("f\n",r);
+            SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
 
             // Dessiner le pixel à la position (x, y) sur l'écran
             SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
-            formerTexY = texY;
 
+
+            // // Déclaration du pointeur pour accéder aux pixels
+            // void* pixels = NULL;
+            
+            // // Verrouiller la texture pour accès direct aux pixels
+            // if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) == 0) {
+            //     // Vérifiez que texY est dans les limites de la texture
+            //     if (texY < 0) texY = 0;
+            //     if (texY >= texHeight) texY = texHeight - 1;
+                
+            //     printf("a");
+                
+
+            //     // Calculer la position du pixel dans la texture
+            //     Uint32* pixelData = (Uint32*)pixels;  // Cast du pointeur de pixels en Uint32
+            //     Uint32 color = pixelData[texY * (pitch / 4) + texX];  // Diviser pitch par 4 car on accède à des Uint32
+
+            //     // Déverrouiller la texture après modification/lecture
+            //     SDL_UnlockTexture(wallTexture);
+
+            //     // Exemple de vérification d'erreur après le verrouillage de la texture
+            //     if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) < 0) {
+            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
+            //         continue; // Ignore cette itération et passe à la suivante
+            //     }
+
+            //     // Extraire les valeurs RGB du pixel
+            //     Uint8 r, g, b;
+            //     SDL_GetRGB(color, wallSurface->format, &r, &g, &b);  // Extraire les valeurs RGB
+            //     // printf("f\n",r);
+            //     SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
+
+            //     // Dessiner le pixel à la position (x, y) sur l'écran
+            //     SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
+            // } else {
+            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
+            // }
         }
 
         // printf("SDL Error: %s\n", SDL_GetError());
@@ -318,8 +338,8 @@ int main() {
     float walkCount = 0.0f;
 
     
-    SDL_Surface *wallSurface;
-    SDL_Texture *wallTexture;
+    SDL_Surface* wallSurface;
+    SDL_Texture* wallTexture;
     loadSurfaces(renderer, &wallSurface);
 
     // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");

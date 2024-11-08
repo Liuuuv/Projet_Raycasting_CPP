@@ -17,8 +17,6 @@ const int TARGET_FPS = 144;
 const int FRAME_DELAY = 1000 / TARGET_FPS;
 const float DELTA_TIME = 1.0f/TARGET_FPS;
 
-
-
 int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -143,7 +141,7 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
 
     float distance = 0.0f;
     bool flipTexture;
-    int pasX = 1;  // épaisseurs des bandes
+    int pasX = 2;  // épaisseurs des bandes
     
     for (int x = 0; x < WIDTH; x = x + pasX) {
         float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;
@@ -195,7 +193,7 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         Uint8 r, g, b;
         Uint32 pixel;
         int formerTexY;
-        int pasY = 1;
+        int pasY = 10;
         // Dessiner la colonne de pixels correspondant à la texture
         for (int y = drawStart; y < drawEnd; y=y+pasY) {
             int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture

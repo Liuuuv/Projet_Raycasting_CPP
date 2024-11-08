@@ -17,8 +17,6 @@ const int TARGET_FPS = 144;
 const int FRAME_DELAY = 1000 / TARGET_FPS;
 const float DELTA_TIME = 1.0f/TARGET_FPS;
 
-
-
 int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -143,7 +141,7 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
 
     float distance = 0.0f;
     bool flipTexture;
-    int pasX = 1;  // épaisseurs des bandes
+    int pasX = 2;  // épaisseurs des bandes
     
     for (int x = 0; x < WIDTH; x = x + pasX) {
         float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;
@@ -195,7 +193,7 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         Uint8 r, g, b;
         Uint32 pixel;
         int formerTexY;
-        int pasY = 1;
+        int pasY = 10;
         // Dessiner la colonne de pixels correspondant à la texture
         for (int y = drawStart; y < drawEnd; y=y+pasY) {
             int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
@@ -224,6 +222,43 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
             SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
             formerTexY = texY;
 
+
+            // // Déclaration du pointeur pour accéder aux pixels
+            // void* pixels = NULL;
+            
+            // // Verrouiller la texture pour accès direct aux pixels
+            // if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) == 0) {
+            //     // Vérifiez que texY est dans les limites de la texture
+            //     if (texY < 0) texY = 0;
+            //     if (texY >= texHeight) texY = texHeight - 1;
+                
+            //     printf("a");
+                
+
+            //     // Calculer la position du pixel dans la texture
+            //     Uint32* pixelData = (Uint32*)pixels;  // Cast du pointeur de pixels en Uint32
+            //     Uint32 color = pixelData[texY * (pitch / 4) + texX];  // Diviser pitch par 4 car on accède à des Uint32
+
+            //     // Déverrouiller la texture après modification/lecture
+            //     SDL_UnlockTexture(wallTexture);
+
+            //     // Exemple de vérification d'erreur après le verrouillage de la texture
+            //     if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) < 0) {
+            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
+            //         continue; // Ignore cette itération et passe à la suivante
+            //     }
+
+            //     // Extraire les valeurs RGB du pixel
+            //     Uint8 r, g, b;
+            //     SDL_GetRGB(color, wallSurface->format, &r, &g, &b);  // Extraire les valeurs RGB
+            //     // printf("f\n",r);
+            //     SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
+
+            //     // Dessiner le pixel à la position (x, y) sur l'écran
+            //     SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
+            // } else {
+            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
+            // }
         }
 
         // printf("SDL Error: %s\n", SDL_GetError());
