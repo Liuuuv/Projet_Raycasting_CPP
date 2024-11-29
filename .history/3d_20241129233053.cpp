@@ -397,7 +397,7 @@ int main() {
         player.x = pos_x;
         player.y = pos_y;
 
-        // Gestion de l'agitation de caméra lors de la marche
+        // Gestion 
         walkCount = updateWalkOffset(isWalking, walkCount);
         float shakeIntensity = 10.0f;
         int walkOffset = (int)floor(sinf(walkCount) * shakeIntensity);

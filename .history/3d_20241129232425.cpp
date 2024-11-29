@@ -259,7 +259,7 @@ float updateWalkOffset(bool isWalking, float walkCount) {
         }
     }
     else {
-        // Si on ne bouge pas, on remet le déplacement de caméra à sa position d'origine (dépend de dans quel quart de cercle on est)
+        // En fonction
         if (((walkSpeed < walkCount) && (walkCount <= PI / 2.0f)) || ((PI - walkSpeed <= walkCount) && (walkCount <= 3.0f * PI / 2.0f))) {
             walkCount -= walkSpeed;
         }
@@ -273,7 +273,6 @@ float updateWalkOffset(bool isWalking, float walkCount) {
     return walkCount;
 }
 
-// Fonction pour charger les surfaces
 void loadSurfaces(SDL_Renderer* renderer, SDL_Surface** wallSurface) {
     // *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
     *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\hey.bmp");
@@ -313,12 +312,23 @@ int main() {
     bool isWalking;
     float walkCount = 0.0f;
 
-
+    
     SDL_Surface *wallSurface;
     SDL_Texture *wallTexture;
     loadSurfaces(renderer, &wallSurface);
 
-    // Boucle de jeu
+    // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
+    // if (wallSurface==NULL) {
+    // printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
+    // }
+    // wallSurface = SDL_ConvertSurfaceFormat(wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
+
+    // wallTexture = SDL_CreateTextureFromSurface(renderer, wallSurface);
+    // if (wallTexture == NULL) {
+    //     printf("Erreur de creation de la texture : %s\n", SDL_GetError());
+    // }
+    // SDL_FreeSurface(wallSurface);
+
     while (running) {
         
 
@@ -330,7 +340,6 @@ int main() {
             }
         }
 
-        // Gestion de la souris
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
         player.angle += (mouseX - (WIDTH / 2)) * player.sensitivity;
@@ -339,7 +348,9 @@ int main() {
         SDL_WarpMouseInWindow(window, WIDTH / 2, HEIGHT / 2);
 
 
-        // Gestion du déplacement
+        // DEPLACEMENTS //
+        
+
         const Uint8* state = SDL_GetKeyboardState(NULL);
         float pos_x = player.x;
         float pos_y = player.y;
@@ -397,7 +408,6 @@ int main() {
         player.x = pos_x;
         player.y = pos_y;
 
-        // Gestion de l'agitation de caméra lors de la marche
         walkCount = updateWalkOffset(isWalking, walkCount);
         float shakeIntensity = 10.0f;
         int walkOffset = (int)floor(sinf(walkCount) * shakeIntensity);
