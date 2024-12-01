@@ -104,11 +104,11 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
         if (sideDistX < sideDistY) {
             sideDistX += xUnit;  // Prochaine intersection en X
             testX += stepX;      // Avancer dans la direction X
-            hitVertical = true;  // On a frappé un mur vertical
+            hitVertical = true;  // On a frappé un potentiel mur vertical
         } else {
             sideDistY += yUnit;  // Prochaine intersection en Y
             testY += stepY;      // Avancer dans la direction Y
-            hitVertical = false; // On a frappé un mur horizontal
+            hitVertical = false; // On a frappé un potentiel mur horizontal
         }
 
         if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {  // Rester dans la grille + Verifier mur touché
@@ -147,9 +147,10 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
     SDL_RenderClear(renderer);
 
     float distance = 0.0f;  // Distance par rapport au mur
+    bool flipTexture;
     int pasX = 1;  // Pas sur l'écran entre deux tracés de bande
 
-    bool flipTexture = false;    // frue si besoin de renverser horizontalement la texture, false sinon
+    flipTexture = false;    // frue si besoin de renverser horizontalement la texture, false sinon
     
     for (int x = 0; x < WIDTH; x = x + pasX) {
         float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;   // Angle du rayon envoyé

@@ -149,7 +149,7 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
     float distance = 0.0f;  // Distance par rapport au mur
     int pasX = 1;  // Pas sur l'écran entre deux tracés de bande
 
-    bool flipTexture = false;    // frue si besoin de renverser horizontalement la texture, false sinon
+    flipTexture = false;    // frue si besoin de renverser horizontalement la texture, false sinon
     
     for (int x = 0; x < WIDTH; x = x + pasX) {
         float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;   // Angle du rayon envoyé
