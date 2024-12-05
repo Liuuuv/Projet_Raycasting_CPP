@@ -133,8 +133,9 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
     wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
 
     // Reversement horizontal de la texture si besoin
+    *flipTexture = false;
     if (hitVertical && rayX > 0) *flipTexture = true;
-    if (not hitVertical && rayY < 0) *flipTexture = true;
+    else if (not hitVertical && rayY < 0) *flipTexture = true;
 
     // Eviter l'effet fish eye
     *distance *= cos(player.angle - rayAngle);

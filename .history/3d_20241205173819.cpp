@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include "liste.h"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -16,6 +17,8 @@ const int TARGET_FPS = 144;
 const int FRAME_DELAY = 1000 / TARGET_FPS;
 const float DELTA_TIME = 1.0f/TARGET_FPS;
 
+
+// Définition de la carte, 0 : vide, 1 : mur
 int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -26,21 +29,23 @@ int map[10][10] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 };
 
+// Définition des attributs du joueur
 struct Player {
-    float x;
-    float y;
-    float angle;
-    float pitch = 0;  // Nouvelle variable pour le "head pitch"
-    float horizontalFOV = 65 * PI / 180;
-    float verticalFOV = 2.0f*atanf(tan(horizontalFOV/2.0f)*ASPECT_RATIO);
+    float x;    // Position x
+    float y;    // Position y
+    float angle;    // Rotation horizontale
+    float pitch = 0;    // Rotation verticale
+    float horizontalFOV = 65 * PI / 180;    // Champ de vision horizontal
+    float verticalFOV = 2.0f*atanf(tan(horizontalFOV/2.0f)*ASPECT_RATIO);   // Champ de vision vertical, dépend du format
     // float verticalFOV = 120 * PI / 180;
     
-    float speed = 2.0f;
-    float thickness = 0.1f;
-    float sensitivity = 0.0008f;
-    float verticalSensitivity = 0.0008f;  // Sensibilité pour le mouvement vertical
+    float speed = 2.0f;     // Vitesse
+    float thickness = 0.2f;     // Epaisseur (éviter de coller les murs)
+    float sensitivity = 0.0008f;    // Sensibilité horizontale de la souris
+    float verticalSensitivity = 0.0008f;    // Sensibilité horizontale de la souris
 };
 
+// Fonction pour borner un float entre deux float
 float clamp(float value, float min, float max) {  
     if (value < min) {
         return min;
@@ -51,10 +56,13 @@ float clamp(float value, float min, float max) {
     }
 }
 
+// Fonction pour dessiner un trait entre 2 points : (x_1, y_1) et (x_2, y_2)
 void drawLine(SDL_Renderer* renderer, int x1, int y1, int x2, int y2) {
     SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
 }
 
+
+// Fonction pour avoir l'intensité (float dans [0,1]) en fonction de la distance du mur
 float getIntensity(float distance) {
     float maxDistance = 5.0f;
     float intensity = fmin(distance / maxDistance, 1.0f);
@@ -64,20 +72,21 @@ float getIntensity(float distance) {
     // return {colorValue, colorValue, colorValue, 255};
 }
 
+// Fonction pour envoyer un rayon dans une direction
 float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture) {
     
     float rayX = cos(rayAngle);
     float rayY = sin(rayAngle);
 
-    // Calcul des pas unitaires pour avancer dans les axes X et Y
-    float xUnit = sqrtf(1 + powf(rayY / rayX, 2)); // Combien d'unités en X on parcourt
-    float yUnit = sqrtf(1 + powf(rayX / rayY, 2)); // Combien d'unités en Y on parcourt
+    // Calcul des pas en x et y pour parcourir une case
+    float xUnit = sqrtf(1 + powf(rayY / rayX, 2));
+    float yUnit = sqrtf(1 + powf(rayX / rayY, 2));
 
-    // Détermination des directions (avancer ou reculer)
+    // Calcul des pas en x et y à faire pour s'avancer d'une case (selon la direction du rayon)
     int stepX = (rayX < 0) ? -1 : 1;
     int stepY = (rayY < 0) ? -1 : 1;
 
-    // Position initiale dans la grille
+    // Calcul de la position initiale dans la grille
     int testX = (int)player.x;
     int testY = (int)player.y;
 
@@ -85,25 +94,24 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
     float sideDistX = (rayX < 0) ? (player.x - testX) * xUnit : (testX + 1.0f - player.x) * xUnit;
     float sideDistY = (rayY < 0) ? (player.y - testY) * yUnit : (testY + 1.0f - player.y) * yUnit;
 
-    // Nouvelle variable pour savoir si on touche un côté vertical ou horizontal
-    bool hit = false;
+    bool hit = false;   // True si on a touché un mur, False sinon
     bool hitVertical = false; // True si c'est un mur vertical, false si horizontal
-    float distance = 0;
+    
 
     while (!hit) {
+
         // Comparer les distances et avancer selon l'axe le plus proche
         if (sideDistX < sideDistY) {
             sideDistX += xUnit;  // Prochaine intersection en X
             testX += stepX;      // Avancer dans la direction X
-            hitVertical = true;  // On a frappé un potentiel mur vertical
+            hitVertical = true;  // On a frappé un mur vertical
         } else {
             sideDistY += yUnit;  // Prochaine intersection en Y
             testY += stepY;      // Avancer dans la direction Y
-            hitVertical = false; // On a frappé un potentiel mur horizontal
+            hitVertical = false; // On a frappé un mur horizontal
         }
 
-        // Vérifier si on a touché un mur
-        if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {  // rester dans la grille + verifier mur touché
+        if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {  // Rester dans la grille + Verifier mur touché
             hit = true;
             
             // La distance finale est la distance sur l'axe qui a été touché en premier (X ou Y)
@@ -115,50 +123,50 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
         }
     }
 
-    float wallX;  // Position exacte sur le mur où le rayon a frappé
+    float wallX;  // Position exacte où le rayon a frappé le mur
     if (hitVertical) {
         wallX = player.y + *distance * rayY;  // Intersection sur un mur vertical
     } else {
         wallX = player.x + *distance * rayX;  // Intersection sur un mur horizontal
     }
-    // printf("X %f\n",wallX);
 
     wallX -= floor(wallX);  // Garder seulement la partie fractionnaire (position sur le mur)
-    // printf("X %f\n",wallX);
 
-    if (hitVertical && rayX > 0) *flipTexture = true;  // Ajustement si le mur est vertical et la direction est opposée
-    if (!hitVertical && rayY < 0) *flipTexture = true; // Ajustement pour les murs horizontaux
+    // Reversement horizontal de la texture si besoin
+    *flipTexture = false;
+    if (hitVertical && rayX > 0) *flipTexture = true;
+    else if (not hitVertical && rayY < 0) *flipTexture = true;
+
+    // printf("%f\n",rayX);
+
+    // Eviter l'effet fish eye
+    *distance *= cos(player.angle - rayAngle);
     
     return wallX;
 }
- 
+
 void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* wallSurface, SDL_Texture* wallTexture) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    float distance;
-    bool flipTexture;
-    int pasX = 10;  // épaisseurs des bandes
+    float distance = 0.0f;  // Distance par rapport au mur
+    int pasX = 1;  // Pas sur l'écran entre deux tracés de bande
+
+    bool flipTexture = false;    // frue si besoin de renverser horizontalement la texture, false sinon
+    
     for (int x = 0; x < WIDTH; x = x + pasX) {
-        float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;
+        float rayAngle = player.angle - player.horizontalFOV / 2 + (x / (float)WIDTH) * player.horizontalFOV;   // Angle du rayon envoyé
+        
+
+        // ## Calcul du la coordonnée X de la texture ##
         float wallX = sendRay(player, rayAngle, &distance, &flipTexture);
 
+        int texWidth = 16;   // Largeur de la texture
+        int texHeight = 16;  // Hauteur de la texture
+
+        // Calculer la coordonnée X dans la texture
+        int texX = int(wallX * float(texWidth));
         
-
-        distance *= cos(player.angle - rayAngle);
-
-        // v1 //
-        // int wallHeight = (int)(HEIGHT / (distance + 0.0001));
-        // int drawStart = (HEIGHT - wallHeight) / 2 + player.pitch*0;
-        // int drawEnd = drawStart + wallHeight;
-
-        // v2 //
-        // float wallHeight =  1.0f;    // Hauteur du mur dans le jeu
-        // float wallProportionScreen = wallHeight/ (distance * tanf(player.verticalFOV/2.0f));
-        
-        // int wallHeightScreen = (int)floor(wallProportionScreen * HEIGHT);
-        // int drawStart = HEIGHT/2 - (int)floor(wallProportionScreen * HEIGHT) + player.pitch*100;
-        // int drawEnd = drawStart + wallHeightScreen;
 
 
         // v3  ## CALCUL D'OU TRACER LES BANDES DES MURS ##
@@ -176,21 +184,9 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         int drawStart = (HEIGHT / 2 - verticalOffset) - wallHeightScreen / 2 + walkOffset;
         int drawEnd = drawStart + wallHeightScreen;
         
-        
 
 
         
-
-        
-        
-
-        int pitch = 0;
-
-        int texWidth = 16;   // Largeur de la texture
-        int texHeight = 16;  // Hauteur de la texture
-
-        // Calculer la coordonnée X dans la texture
-        int texX = int(wallX * float(texWidth));
 
         texX = texWidth - texX;
         if (texX < 0) texX = 0;
@@ -198,20 +194,19 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         // printf("X %f\n",(float)texX);
 
         // printf("%f\n",texX);
-        if (flipTexture = true) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
+        if (flipTexture == true) texX = texWidth - texX - 1;  // Ajustement si le mur est vertical et la direction est opposée
 
         Uint32* pixels = (Uint32*)wallSurface->pixels;  // Uint32 si la surface est en 32 bits
 
         Uint8 r, g, b;
         Uint32 pixel;
         int formerTexY;
-        int pasY = 10;
+        int pasY = 1;
         // Dessiner la colonne de pixels correspondant à la texture
         for (int y = drawStart; y < drawEnd; y=y+pasY) {
             int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
-            int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer le pixel Y à utiliser dans la texture
+            int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer la coordonnée Y à utiliser dans la texture
             
-            // printf("Y %f\n",(float)texY);
 
             if (texY < 0) texY = 0;
             if (texY >= texHeight) texY = texHeight - 1;
@@ -225,7 +220,6 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
                 r *= intensity;
                 g *= intensity;
                 b *= intensity;
-                // printf("f\n",r);
                 SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
             }
             
@@ -234,65 +228,18 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
             SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
             formerTexY = texY;
 
-
-            // // Déclaration du pointeur pour accéder aux pixels
-            // void* pixels = NULL;
-            
-            // // Verrouiller la texture pour accès direct aux pixels
-            // if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) == 0) {
-            //     // Vérifiez que texY est dans les limites de la texture
-            //     if (texY < 0) texY = 0;
-            //     if (texY >= texHeight) texY = texHeight - 1;
-                
-            //     printf("a");
-                
-
-            //     // Calculer la position du pixel dans la texture
-            //     Uint32* pixelData = (Uint32*)pixels;  // Cast du pointeur de pixels en Uint32
-            //     Uint32 color = pixelData[texY * (pitch / 4) + texX];  // Diviser pitch par 4 car on accède à des Uint32
-
-            //     // Déverrouiller la texture après modification/lecture
-            //     SDL_UnlockTexture(wallTexture);
-
-            //     // Exemple de vérification d'erreur après le verrouillage de la texture
-            //     if (SDL_LockTexture(wallTexture, NULL, &pixels, &pitch) < 0) {
-            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
-            //         continue; // Ignore cette itération et passe à la suivante
-            //     }
-
-            //     // Extraire les valeurs RGB du pixel
-            //     Uint8 r, g, b;
-            //     SDL_GetRGB(color, wallSurface->format, &r, &g, &b);  // Extraire les valeurs RGB
-            //     // printf("f\n",r);
-            //     SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
-
-            //     // Dessiner le pixel à la position (x, y) sur l'écran
-            //     SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
-            // } else {
-            //         printf("Échec du verrouillage de la texture : %s\n", SDL_GetError());
-            // }
         }
-
-        // printf("SDL Error: %s\n", SDL_GetError());
-
-
-
-        // SDL_Color color = getColor(distance);
-        // SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-        // drawLine(renderer, x, drawStart, x, drawEnd);
     }
 
     SDL_RenderPresent(renderer);
 }
 
+// Fonction pour savoir si la position (x,y) est accessible
 bool canMoveTo(float x, float y) {
     return (x >= 0 && x < 10 && y >= 0 && y < 10 && map[(int)y][(int)x] != 1);
 }
 
-bool isAgainstWall(float playerX, float playerY) {
-    return (map[(int)playerY][(int)playerX] == 1);
-}
-
+// Fonction pour faire un rendu du text
 void renderText(SDL_Renderer* renderer, TTF_Font* font, std::string text, SDL_Color color, int x, int y) {
     SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), color);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -302,6 +249,8 @@ void renderText(SDL_Renderer* renderer, TTF_Font* font, std::string text, SDL_Co
     SDL_DestroyTexture(texture);
 }
 
+
+// Fonction pour faire le mouvement de camera lorsqu'on se déplace
 float updateWalkOffset(bool isWalking, float walkCount) {
     float walkSpeed = 0.12f;
     float tolerance = 0.1f;
@@ -312,6 +261,7 @@ float updateWalkOffset(bool isWalking, float walkCount) {
         }
     }
     else {
+        // Si on ne bouge pas, on remet le déplacement de caméra à sa position d'origine (dépend de dans quel quart de cercle on est)
         if (((walkSpeed < walkCount) && (walkCount <= PI / 2.0f)) || ((PI - walkSpeed <= walkCount) && (walkCount <= 3.0f * PI / 2.0f))) {
             walkCount -= walkSpeed;
         }
@@ -325,6 +275,7 @@ float updateWalkOffset(bool isWalking, float walkCount) {
     return walkCount;
 }
 
+// Fonction pour charger les surfaces
 void loadSurfaces(SDL_Renderer* renderer, SDL_Surface** wallSurface) {
     // *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
     *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\hey.bmp");
@@ -350,8 +301,6 @@ int main() {
     Player player = {1.5f, 1.5f, 0};
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    // printf("%f", player.vertical_fov);
-
     bool running = true;
     SDL_Event event;
 
@@ -364,23 +313,12 @@ int main() {
     bool isWalking;
     float walkCount = 0.0f;
 
-    
+
     SDL_Surface *wallSurface;
     SDL_Texture *wallTexture;
     loadSurfaces(renderer, &wallSurface);
 
-    // wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
-    // if (wallSurface==NULL) {
-    // printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
-    // }
-    // wallSurface = SDL_ConvertSurfaceFormat(wallSurface, SDL_PIXELFORMAT_ARGB8888, 0);
-
-    // wallTexture = SDL_CreateTextureFromSurface(renderer, wallSurface);
-    // if (wallTexture == NULL) {
-    //     printf("Erreur de creation de la texture : %s\n", SDL_GetError());
-    // }
-    // SDL_FreeSurface(wallSurface);
-
+    // Boucle de jeu
     while (running) {
         
 
@@ -392,6 +330,7 @@ int main() {
             }
         }
 
+        // Gestion de la souris
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
         player.angle += (mouseX - (WIDTH / 2)) * player.sensitivity;
@@ -400,9 +339,7 @@ int main() {
         SDL_WarpMouseInWindow(window, WIDTH / 2, HEIGHT / 2);
 
 
-        // DEPLACEMENTS //
-        
-
+        // Gestion du déplacement
         const Uint8* state = SDL_GetKeyboardState(NULL);
         float pos_x = player.x;
         float pos_y = player.y;
@@ -460,6 +397,7 @@ int main() {
         player.x = pos_x;
         player.y = pos_y;
 
+        // Gestion de l'agitation de caméra lors de la marche
         walkCount = updateWalkOffset(isWalking, walkCount);
         float shakeIntensity = 10.0f;
         int walkOffset = (int)floor(sinf(walkCount) * shakeIntensity);
