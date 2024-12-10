@@ -147,7 +147,7 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
     else if (not hitVertical && rayY < 0) *flipTexture = true;
 
     // Eviter l'effet fish eye
-    *distance *= cos(player.angle - rayAngle);
+    // *distance *= cos(player.angle - rayAngle);
     
     return wallX;
 }
@@ -213,7 +213,6 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
 
         // Pour avec texture
 
-        // ##
         // // Dessiner la colonne de pixels correspondant à la texture
         // for (int y = drawStart; y < drawEnd; y=y+pasY) {
         //     int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
@@ -241,13 +240,11 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         //     formerTexY = texY;
 
         // }
-        // ##
 
 
 
         // Pour sans texture
-
-        // ##
+        
         SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
         float intensity = getIntensity(distance);
 
@@ -256,8 +253,6 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         
         drawLine(renderer, x, drawStart, x, drawEnd);
-        // ##
-
     }
 
     SDL_RenderPresent(renderer);

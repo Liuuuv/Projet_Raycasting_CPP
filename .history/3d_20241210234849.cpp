@@ -121,17 +121,6 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
         }
     }
 
-    // pour refaire méthode naïve
-    // *distance = 0;
-    // while (true) {
-    //         int testX = (int)(player.x + rayX * *distance);
-    //         int testY = (int)(player.y + rayY * *distance);
-    //         if (testX < 0 || testX >= 10 || testY < 0 || testY >= 10 || map[testY][testX] == 1) {
-    //             break;
-    //         }
-    //         *distance += 0.01;
-    //     }
-
     float wallX;  // Position exacte où le rayon a frappé le mur
     if (hitVertical) {
         wallX = player.y + *distance * rayY;  // Intersection sur un mur vertical
@@ -209,11 +198,7 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         Uint32 pixel;
         int formerTexY;
         int pasY = 1;
-
-
-        // Pour avec texture
-
-        // ##
+        
         // // Dessiner la colonne de pixels correspondant à la texture
         // for (int y = drawStart; y < drawEnd; y=y+pasY) {
         //     int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
@@ -241,23 +226,16 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         //     formerTexY = texY;
 
         // }
-        // ##
 
 
-
-        // Pour sans texture
-
-        // ##
         SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
         float intensity = getIntensity(distance);
 
-        Uint8 colorValue = static_cast<Uint8>(intensity * 230);
+        Uint8 colorValue = static_cast<Uint8>((1 - intensity) * 230);
         SDL_Color color = {colorValue, colorValue, colorValue, 255};
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         
         drawLine(renderer, x, drawStart, x, drawEnd);
-        // ##
-
     }
 
     SDL_RenderPresent(renderer);

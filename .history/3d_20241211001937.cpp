@@ -9,8 +9,8 @@
 #include <algorithm>
 #include "liste.h"
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+const int WIDTH = 1920;
+const int HEIGHT = 1080;
 const float ASPECT_RATIO = (float)WIDTH/(float)HEIGHT;
 const float PI = 3.14159265f;
 const int TARGET_FPS = 144;
