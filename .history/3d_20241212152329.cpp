@@ -9,8 +9,8 @@
 #include <algorithm>
 #include "liste.h"
 
-const int WIDTH = 400;
-const int HEIGHT = 300;
+const int WIDTH = 800;
+const int HEIGHT = 600;
 const float ASPECT_RATIO = (float)WIDTH/(float)HEIGHT;
 const float PI = 3.14159265f;
 const int TARGET_FPS = 144;
@@ -215,32 +215,32 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
 
         // ##
         // Dessiner la colonne de pixels correspondant à la texture
-        for (int y = drawStart; y < drawEnd; y=y+pasY) {
-            int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
-            int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer la coordonnée Y à utiliser dans la texture
+        // for (int y = drawStart; y < drawEnd; y=y+pasY) {
+        //     int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
+        //     int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer la coordonnée Y à utiliser dans la texture
             
 
-            if (texY < 0) texY = 0;
-            if (texY >= texHeight) texY = texHeight - 1;
+        //     if (texY < 0) texY = 0;
+        //     if (texY >= texHeight) texY = texHeight - 1;
 
-            // Si besoin de changer de couleur
-            if (texY != formerTexY) {
-                pixel = pixels[texX + texWidth * texY];
+        //     // Si besoin de changer de couleur
+        //     if (texY != formerTexY) {
+        //         pixel = pixels[texX + texWidth * texY];
 
-                SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
-                float intensity = getIntensity(distance);
-                r *= intensity;
-                g *= intensity;
-                b *= intensity;
-                SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
-            }
+        //         SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
+        //         float intensity = getIntensity(distance);
+        //         r *= intensity;
+        //         g *= intensity;
+        //         b *= intensity;
+        //         SDL_SetRenderDrawColor(renderer, r, g, b, 255);      // Définir la couleur du pixel
+        //     }
             
 
-            // Dessiner le pixel à la position (x, y) sur l'écran
-            SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
-            formerTexY = texY;
+        //     // Dessiner le pixel à la position (x, y) sur l'écran
+        //     SDL_RenderDrawPoint(renderer, x, y);  // Dessiner le pixel
+        //     formerTexY = texY;
 
-        }
+        // }
         // ##
 
 
@@ -248,14 +248,14 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         // Pour sans texture
 
         // ##
-        // SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
-        // float intensity = getIntensity(distance);
+        SDL_GetRGB(pixel, wallSurface->format, &r, &g, &b);
+        float intensity = getIntensity(distance);
 
-        // Uint8 colorValue = static_cast<Uint8>(intensity * 230);
-        // SDL_Color color = {colorValue, colorValue, colorValue, 255};
-        // SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+        Uint8 colorValue = static_cast<Uint8>(intensity * 230);
+        SDL_Color color = {colorValue, colorValue, colorValue, 255};
+        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         
-        // drawLine(renderer, x, drawStart, x, drawEnd);
+        drawLine(renderer, x, drawStart, x, drawEnd);
         // ##
 
     }

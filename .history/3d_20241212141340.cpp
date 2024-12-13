@@ -9,8 +9,8 @@
 #include <algorithm>
 #include "liste.h"
 
-const int WIDTH = 400;
-const int HEIGHT = 300;
+const int WIDTH = 800;
+const int HEIGHT = 600;
 const float ASPECT_RATIO = (float)WIDTH/(float)HEIGHT;
 const float PI = 3.14159265f;
 const int TARGET_FPS = 144;
@@ -89,8 +89,8 @@ float sendRay(Player player, float rayAngle, float *distance, bool *flipTexture)
     int testY = (int)player.y;
 
     // Calcul du premier point d'intersection avec la grille
-    float sideDistX = (rayX < 0) ? (player.x - testX) * xUnit : (testX + 1.0f - player.x) * xUnit;
-    float sideDistY = (rayY < 0) ? (player.y - testY) * yUnit : (testY + 1.0f - player.y) * yUnit;
+    float sideDistX = (rayX < 0) ? (player.x - testX) * xUnit : (1.0f - player.x) * xUnit;
+    float sideDistY = (rayY < 0) ? (player.y - testY) * yUnit : (1.0f - player.y) * yUnit;
 
     bool hit = false;   // True si on a touché un mur, False sinon
     bool hitVertical = false; // True si c'est un mur vertical, false si horizontal

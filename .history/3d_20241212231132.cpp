@@ -9,8 +9,8 @@
 #include <algorithm>
 #include "liste.h"
 
-const int WIDTH = 400;
-const int HEIGHT = 300;
+const int WIDTH = 800;
+const int HEIGHT = 600;
 const float ASPECT_RATIO = (float)WIDTH/(float)HEIGHT;
 const float PI = 3.14159265f;
 const int TARGET_FPS = 144;
@@ -214,7 +214,7 @@ void render(SDL_Renderer* renderer, Player player, int walkOffset, SDL_Surface* 
         // Pour avec texture
 
         // ##
-        // Dessiner la colonne de pixels correspondant à la texture
+        Dessiner la colonne de pixels correspondant à la texture
         for (int y = drawStart; y < drawEnd; y=y+pasY) {
             int d = y * 256 - HEIGHT * 128 + verticalOffset * 256 + wallHeightScreen * 128 - walkOffset * 256;  // Distance dans la texture
             int texY = ((d * texHeight) / wallHeightScreen) / 256;    // Calculer la coordonnée Y à utiliser dans la texture

@@ -9,8 +9,8 @@
 #include <algorithm>
 #include "liste.h"
 
-const int WIDTH = 400;
-const int HEIGHT = 300;
+const int WIDTH = 200;
+const int HEIGHT = 100;
 const float ASPECT_RATIO = (float)WIDTH/(float)HEIGHT;
 const float PI = 3.14159265f;
 const int TARGET_FPS = 144;
@@ -307,7 +307,7 @@ float updateWalkOffset(bool isWalking, float walkCount) {
 // Fonction pour charger les surfaces
 void loadSurfaces(SDL_Renderer* renderer, SDL_Surface** wallSurface) {
     // *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\brique.bmp");
-    *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\thumb_up.bmp");
+    *wallSurface = SDL_LoadBMP("C:\\Users\\olivi\\kDrive\\cours\\UE_prog\\projet\\sprites\\fourier_logo.bmp");
     if (wallSurface==NULL) {
     printf("Erreur lors du chargement de l'image : %s\n", SDL_GetError());
     }
