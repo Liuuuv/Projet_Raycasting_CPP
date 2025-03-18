@@ -12,3 +12,5 @@
 // int wallHeightScreen = (int)floor(wallProportionScreen * HEIGHT);
 // int drawStart = HEIGHT/2 - (int)floor(wallProportionScreen * HEIGHT) + player.pitch*100;
 // int drawEnd = drawStart + wallHeightScreen;
+
+EXECUTER 3d.cpp suffit.
